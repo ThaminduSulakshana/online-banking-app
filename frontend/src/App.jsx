@@ -8,10 +8,19 @@ import TransfersPage from './pages/TransfersPage';
 import AccountsPage from './pages/AccountsPage';
 import LoansPage from './pages/LoansPage';
 import SupportPage from './pages/SupportPage';
+import AdvertisementManagementPage from './pages/AdvertisementManagementPage';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <MainLayout>{children}</MainLayout> : <Navigate to="/login" />;
+};
+
+const AdminRoute = ({ children, allowedRoles }) => {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  
+  const hasRole = user?.roles?.some(role => allowedRoles.includes(role));
+  return hasRole ? <MainLayout>{children}</MainLayout> : <Navigate to="/dashboard" />;
 };
 
 function App() {
@@ -26,6 +35,7 @@ function App() {
           <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
           <Route path="/loans" element={<PrivateRoute><LoansPage /></PrivateRoute>} />
           <Route path="/support" element={<PrivateRoute><SupportPage /></PrivateRoute>} />
+          <Route path="/admin/advertisements" element={<AdminRoute allowedRoles={['ROLE_ADMIN', 'ROLE_ADVERTISEMENT_ADMIN']}><AdvertisementManagementPage /></AdminRoute>} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Router>

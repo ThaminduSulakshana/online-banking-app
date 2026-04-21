@@ -11,7 +11,8 @@ import {
   LogOut,
   Bell,
   Search,
-  User
+  User,
+  Megaphone
 } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
@@ -30,6 +31,10 @@ const MainLayout = ({ children }) => {
     { name: 'Loans', icon: HandCoins, path: '/loans' },
     { name: 'Support', icon: LifeBuoy, path: '/support' }
   ];
+
+  if (user?.roles?.some(role => ['ROLE_ADMIN', 'ROLE_ADVERTISEMENT_ADMIN'].includes(role))) {
+    navItems.push({ name: 'Ad Management', icon: Megaphone, path: '/admin/advertisements' });
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)' }}>

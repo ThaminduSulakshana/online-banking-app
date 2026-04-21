@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { accountService } from '../services/accountService';
 import { transactionService } from '../services/transactionService';
+import { advertisementService } from '../services/advertisementService';
 import { Card, Button } from '../components/UI';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  ArrowUpRight, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ArrowUpRight,
   Plus,
   RefreshCw,
   ArrowRightLeft
@@ -17,6 +18,7 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -25,10 +27,17 @@ const DashboardPage = () => {
     try {
       const accs = await accountService.getMyAccounts(user.token);
       setAccounts(accs);
-      
+
       if (accs.length > 0) {
         const history = await transactionService.getHistory(accs[0].accountNumber, user.token);
         setRecentTransactions(history.slice(0, 5));
+      }
+
+      try {
+        const fetchedAds = await advertisementService.getActiveAds(user.token);
+        setAds(fetchedAds);
+      } catch (adErr) {
+        console.error('Could not fetch ads', adErr);
       }
     } catch (err) {
       setError('Could not update account info');
@@ -58,18 +67,18 @@ const DashboardPage = () => {
             <RefreshCw size={16} style={{ marginRight: '0.5rem' }} className={loading ? 'animate-spin' : ''} />
             Refresh
           </Button>
-          <Button variant="accent" size="sm" onClick={() => window.location.href='/accounts'}>
+          <Button variant="accent" size="sm" onClick={() => window.location.href = '/accounts'}>
             <Plus size={16} style={{ marginRight: '0.5rem' }} />
             New Account
           </Button>
         </div>
       </div>
 
-      <div style={{ 
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' 
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem'
       }}>
-        <Card style={{ 
-          background: 'linear-gradient(135deg, var(--accent-color) 0%, #1d4ed8 100%)', 
+        <Card style={{
+          background: 'linear-gradient(135deg, var(--accent-color) 0%, #1d4ed8 100%)',
           color: 'white', border: 'none'
         }}>
           <p style={{ fontSize: '0.875rem', opacity: 0.8 }}>Total Balance</p>
@@ -143,8 +152,26 @@ const DashboardPage = () => {
               </div>
             )}
           </Card>
+
+          {ads.length > 0 && (
+            <div style={{ marginTop: '2rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>Special Offers</h2>
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {ads.map(ad => (
+                  <Card key={ad.id} style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <img src={ad.imageUrl} alt={ad.title} style={{ width: '100%', height: '140px', objectFit: 'cover' }} />
+                    <div style={{ padding: '1rem' }}>
+                      <h3 style={{ fontWeight: '600', fontSize: '1rem', marginBottom: '0.25rem' }}>{ad.title}</h3>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ad.content}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
     </div>
   );
 };
